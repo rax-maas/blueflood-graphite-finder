@@ -6,7 +6,7 @@ version = '0.0.1'
 setup(
   name='blueflood-graphite-finder',
   version=version,
-  url='https://github.com/rackerlabs/blueflood/tree/master/contrib/graphite',
+  url='https://github.com/rackerlabs/blueflood-graphite-finder',
   license='APL2',
   keywords='blueflood graphite finder metrics',
   author='Rackspace Metrics',

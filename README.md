@@ -10,9 +10,9 @@ To install package from pypi using pip:
     pip install blueflood-graphite-finder
 
 To install manually with code from github repo:
-    Get the [blueflood](https://github.com/rackerlabs/blueflood) repo from github. Execute the following commands
+    Get the [blueflood-graphite-finder](https://github.com/rackerlabs/blueflood-graphite-finder) repo from github. Execute the following commands
 
-    cd $BLUEFLOOD_REPO_LOCATION/contrib/graphite
+    cd $REPO_LOCATION
     virtualenv bf-finder
     source bf-finder/bin/activate
     pip install .
