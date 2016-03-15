@@ -4,7 +4,7 @@ import re
 import time
 import requests
 import json
-import auth
+from blueflood_graphite_finder import auth
 import sys
 import traceback
 import os.path
