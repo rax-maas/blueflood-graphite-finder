@@ -36,14 +36,14 @@ The auth tests require env variables to be set as follows:
        For no-auth tests:
 
        NO_AUTH_URL=<no auth url>
-       NO_AUTH_TENANT=836986
+       NO_AUTH_TENANT=<tenant id>
 
        For auth tests:
 
-       AUTH_URL=https://staging.metrics.api.rackspacecloud.com
-       AUTH_TENANT=887463
-       AUTH_USER_NAME=cmetrixqe_cmsvcadmin
-       AUTH_API_KEY=<cmetrixqe_cmsvcadmin's api key>
+       AUTH_URL=<blueflood end point>
+       AUTH_TENANT=<tenant id>
+       AUTH_USER_NAME=<username>
+       AUTH_API_KEY=<user's api key>
 
 
 To run test, run the below command

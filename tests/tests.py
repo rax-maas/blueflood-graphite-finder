@@ -7,8 +7,9 @@ import sys
 import urllib
 import threading
 import logging.config
-from blueflood import TenantBluefloodFinder, TenantBluefloodReader, TenantBluefloodLeafNode, \
-     BluefloodClient, auth, calc_res, secs_per_res, NonNestedDataKey, NestedDataKey
+from blueflood_graphite_finder.blueflood import TenantBluefloodFinder, TenantBluefloodReader, TenantBluefloodLeafNode, \
+     BluefloodClient, calc_res, secs_per_res, NonNestedDataKey, NestedDataKey
+from blueflood_graphite_finder import auth
 
 logging_file = os.path.join(os.path.dirname(__file__), 'logging.ini')
 logging.config.fileConfig(logging_file)

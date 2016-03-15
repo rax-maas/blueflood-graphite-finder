@@ -5,7 +5,7 @@ from graphite_api import storage
 from graphite_api.node import BranchNode
 import logging.config
 import os
-import blueflood as bf
+import blueflood_graphite_finder.blueflood as bf
 
 logging_file = os.path.join(os.path.dirname(__file__), 'logging.ini')
 logging.config.fileConfig(logging_file)
