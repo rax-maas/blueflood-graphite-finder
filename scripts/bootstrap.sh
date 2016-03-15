@@ -103,11 +103,12 @@ git -C /tmp/blueflood checkout master
 # Using local code instead of downloading from git
 # cd /tmp/blueflood/contrib/graphite
 cd /vagrant
+
 python setup.py install
 cat > /etc/graphite-api.yaml << EOL
 search_index: /dev/null
 finders:
-  - blueflood.TenantBluefloodFinder
+  - blueflood_graphite_finder.blueflood.TenantBluefloodFinder
 functions:
   - graphite_api.functions.SeriesFunctions
   - graphite_api.functions.PieFunctions
