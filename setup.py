@@ -1,18 +1,18 @@
 # coding: utf-8
 from setuptools import setup
 
-version = '0.0.1'
+version = '0.0.3'
 
 setup(
   name='blueflood-graphite-finder',
   version=version,
   url='https://github.com/rackerlabs/blueflood-graphite-finder',
-  license='APL2',
+  license='Apache Software License 2.0',
   keywords='blueflood graphite finder metrics',
   author='Rackspace Metrics',
   author_email='cloudMetrics-dev@lists.rackspace.com',
   description=('A plugin for using graphite-web and graphite-api with Blueflood'),
-  py_modules=('blueflood','auth','rax_auth'),
+  packages=find_packages(exclude=['tests']),
   zip_safe=False,
   include_package_data=True,
   platforms='any',

@@ -74,6 +74,8 @@ atlassian-ide-plugin.xml
 tests.log
 node_modules
 */grinder/resources
+bf-finder/*
+blueflood_graphite_finder.egg-info/*
 
 # python Setuptools distribution folder.
 contrib/enum_metrics/dist/
