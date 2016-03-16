@@ -3,11 +3,27 @@ Blueflood Finder
 
 The BF finder is the graphite plugin that allows graphite and grafana to use blueflood as a backend.
 
-### Setup
-
-To install package from pypi using pip:
+## Installation
 
     pip install blueflood-graphite-finder
+
+## Using with graphite-api
+
+In your graphite-api config file:
+
+
+    finders:
+      - blueflood_graphite_finder.blueflood.TenantBluefloodFinder
+    blueflood:
+      tenant: <tenantid>
+      username: <username>
+      apikey: <apikey>
+      authentication_module: blueflood_graphite_finder.rax_auth
+      authentication_class: BluefloodAuth
+      urls:
+        - https://blueflood-host:port
+
+## Setup
 
 To install manually with code from github repo:
     Get the [blueflood-graphite-finder](https://github.com/rackerlabs/blueflood-graphite-finder) repo from github. Execute the following commands
@@ -27,14 +43,14 @@ vagrant vm use the below commands.
     
 ###Tests
 
-The tests require env variables to be set as follows:
+The tests require the following environment variables. Atleast one of no-auth or auth test variables should be set.
 
-       For no-auth tests:
+For no-auth tests:
 
        NO_AUTH_URL=<no auth url>
        NO_AUTH_TENANT=<tenant id>
 
-       For auth tests:
+For auth tests:
 
        AUTH_URL=<blueflood end point>
        AUTH_TENANT=<tenant id>
