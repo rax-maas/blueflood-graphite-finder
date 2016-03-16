@@ -46,3 +46,8 @@ To run tests, run the below commands
     
     pip install tox
     tox
+
+To run nosetests, run the below commands
+
+    pip install -r blueflood-graphite-finder/test_requirements.txt
+    nosetests
