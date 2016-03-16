@@ -20,7 +20,7 @@ rax_tenant="836986"
 #staging
 #rax_username="<username>"
 #rax_apikey="<api key>"
-#rax_auth_indicator="rax_auth"
+#rax_auth_indicator="blueflood_graphite_finder.rax_auth"
 #bf_url=http://staging.metrics.api.rackspacecloud.com
 
 #local
