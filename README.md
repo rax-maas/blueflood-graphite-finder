@@ -27,11 +27,7 @@ vagrant vm use the below commands.
     
 ###Tests
 
-After finishing setup above you can do the below command to install test dependencies.
-
-    pip install -r blueflood-graphite-finder/test_requirements.txt
-
-The auth tests require env variables to be set as follows:
+The tests require env variables to be set as follows:
 
        For no-auth tests:
 
@@ -46,6 +42,7 @@ The auth tests require env variables to be set as follows:
        AUTH_API_KEY=<user's api key>
 
 
-To run test, run the below command
-    cd blueflood-graphite-finder/
-    nosetests -v
+To run tests, run the below commands
+    
+    pip install tox
+    tox

@@ -41,6 +41,11 @@ Thumbs.db
 ################
 .gradle
 
+# Library related Files #
+################
+.tox
+.vagrant
+
 # Build output directories #
 ############################
 /target
