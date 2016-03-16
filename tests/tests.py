@@ -211,20 +211,26 @@ class BluefloodTests(TestCase):
         self.bfc.maxmetrics_per_req = 1
         self.bfc.maxlen_per_req = 15
         groups = self.bfc.gen_groups([self.node1, self.node2])
+        groups[0].sort()
         self.assertSetEqual(set(tuple(map(tuple, groups))),
-                            set([('e.f',), ('a.b',)]))
+                            set([('a.b',), ('e.f',)]))
 
         # allow 2 metrics per group
         self.bfc.maxmetrics_per_req = 2
         groups = self.bfc.gen_groups([self.node1, self.node2])
+        print('XXXXX:', groups)
+        groups[0].sort()
+        print('YYYYY:', groups)
+
         self.assertSetEqual(set(tuple(map(tuple, groups))),
-                            set([('e.f', 'a.b',)]))
+                            set([('a.b', 'e.f',)]))
 
         # now only room for 1 per group
         self.bfc.maxlen_per_req = 10
         groups = self.bfc.gen_groups([self.node1, self.node2])
+        groups[0].sort()
         self.assertSetEqual(set(tuple(map(tuple, groups))),
-                            set([('e.f',), ('a.b',)]))
+                            set([('a.b',), ('e.f',)]))
 
         # no room for metric in a group
         self.bfc.maxlen_per_req = 9
