@@ -218,9 +218,7 @@ class BluefloodTests(TestCase):
         # allow 2 metrics per group
         self.bfc.maxmetrics_per_req = 2
         groups = self.bfc.gen_groups([self.node1, self.node2])
-        print('XXXXX:', groups)
         groups[0].sort()
-        print('YYYYY:', groups)
 
         self.assertSetEqual(set(tuple(map(tuple, groups))),
                             set([('a.b', 'e.f',)]))
