@@ -67,3 +67,8 @@ To run nosetests, run the below commands
 
     pip install -r blueflood-graphite-finder/test_requirements.txt
     nosetests
+    
+## Changelog
+    
+* 1.0.1 (2016-03-25) Performance improvements for /metrics/find API.
+* 1.0.0 (2016-03-23) Base version. 
