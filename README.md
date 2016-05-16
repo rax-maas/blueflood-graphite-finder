@@ -41,6 +41,8 @@ vagrant vm use the below commands.
     vagrant box add ubuntu/trusty64
     vagrant up
     
+To access grafana, bring your browser up and access the URL: http://192.168.50.4    
+    
 ###Tests
 
 The tests require the following environment variables. Atleast one of no-auth or auth test variables should be set.
