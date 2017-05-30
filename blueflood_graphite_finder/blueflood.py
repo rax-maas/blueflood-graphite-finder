@@ -396,7 +396,7 @@ class BluefloodClient(object):
         # Determines which key to use for the data
         if not len(values):
             return NonNestedDataKey(None)
-        value_res_order = ['average', 'latest', 'numPoints']
+        value_res_order = ['average', 'latest', 'sum', 'numPoints']
         present_keys = [v for v in value_res_order if v in values[0]]
         if present_keys:
             return NonNestedDataKey(present_keys[0])
