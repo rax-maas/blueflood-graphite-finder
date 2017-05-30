@@ -2,9 +2,5 @@ language: python
 install:
   - travis_retry pip install tox==1.6.1
 script:
-  - export AUTH_TENANT=$AUTH_TENANT
-  - export AUTH_URL=$AUTH_URL 
-  - export AUTH_API_KEY=$AUTH_API_KEY 
-  - export AUTH_USER_NAME=$AUTH_USER_NAME
   - export TOXENV=py27
   - travis_retry tox
