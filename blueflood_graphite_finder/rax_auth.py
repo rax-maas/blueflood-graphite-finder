@@ -14,7 +14,6 @@ class BluefloodAuth(object):
         if config is not None:
             self.username = config['blueflood']['username']
             self.apiKey = config['blueflood']['apikey']
-            print "in BluefloodAuth"
         else:
             from django.conf import settings
             self.username = getattr(settings, 'RAX_USER')
@@ -38,7 +37,7 @@ class BluefloodAuth(object):
         r = requests.post(IDENTITY_ENDPOINT + 'tokens', data=payload,
                           headers=auth.headers())
         if r.status_code != 200:
-            print "Error: code=%d, msg=%s, payload=%s" % (r.status_code, r.text, payload)
+            print "Error: code=%d, msg=%s" % (r.status_code, r.text)
         jsonObj = r.json()
         self.token = jsonObj['access']['token']['id']
         self.expiration_UTC = dateparse(
