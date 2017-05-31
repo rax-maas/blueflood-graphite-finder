@@ -20,7 +20,7 @@ try:
     auth_user_name = os.environ['AUTH_USER_NAME']
     auth_tenant = os.environ['AUTH_TENANT']
     bf_url = os.environ['BLUEFLOOD_URL']
-    print "Authenticating using user_name=" + auth_user_name + ", tenant=" + auth_tenant + ", url=" + bf_url
+    print "Authenticating using user_name=" + auth_user_name + ", tenant=" + auth_tenant + ", url=" + bf_url + ", auth_api_key=" + auth_api_key
     auth_config = {
         'blueflood': {
             'authentication_module': 'blueflood_graphite_finder.rax_auth',
