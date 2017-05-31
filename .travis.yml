@@ -1,6 +1,11 @@
 language: python
+env:
+  - AUTH_URL=$AUTH_URL
+  - AUTH_TENANT=$AUTH_TENANT
+  - AUTH_USER_NAME=$AUTH_USER_NAME
+  - AUTH_API_KEY=$AUTH_API_KEY
+  - TOXENV=py27
 install:
   - travis_retry pip install tox==1.6.1
 script:
-  - export TOXENV=py27
   - travis_retry tox
