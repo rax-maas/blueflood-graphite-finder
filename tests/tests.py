@@ -19,14 +19,15 @@ try:
     auth_api_key = os.environ['AUTH_API_KEY']
     auth_user_name = os.environ['AUTH_USER_NAME']
     auth_tenant = os.environ['AUTH_TENANT']
-    auth_url = os.environ['AUTH_URL']
+    bf_url = os.environ['BLUEFLOOD_URL']
+    print "Authenticating using user_name=" + auth_user_name + ", tenant=" + auth_tenant + ", url=" + bf_url
     auth_config = {
         'blueflood': {
             'authentication_module': 'blueflood_graphite_finder.rax_auth',
             'authentication_class': 'BluefloodAuth',
             'username': auth_user_name,
             'apikey': auth_api_key,
-            'urls': [auth_url],
+            'urls': [bf_url],
             'tenant': auth_tenant}}
 except Exception as e:
     print e
@@ -35,9 +36,9 @@ except Exception as e:
 
 try:
     no_auth_tenant = os.environ['NO_AUTH_TENANT']
-    no_auth_url = os.environ['NO_AUTH_URL']
+    no_bf_url = os.environ['NO_BLUEFLOOD_URL']
     no_auth_config = {'blueflood': {
-        'urls': [no_auth_url],
+        'urls': [no_bf_url],
         'tenant': no_auth_tenant}}
 except:
     print "NO_AUTH env undefined, not running no_auth tests"
@@ -127,8 +128,6 @@ class BluefloodTests(TestCase):
         auth.set_auth(None)
 
     def run_find(self, finder):
-        foo = finder.find_nodes(FindQuery('*', 0, 100))
-        print foo
         nodes = list(finder.find_nodes(FindQuery('*', 0, 100)))
         self.assertTrue(len(nodes) > 0)
 
