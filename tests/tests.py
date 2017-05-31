@@ -127,6 +127,8 @@ class BluefloodTests(TestCase):
         auth.set_auth(None)
 
     def run_find(self, finder):
+        foo = finder.find_nodes(FindQuery('*', 0, 100))
+        print foo
         nodes = list(finder.find_nodes(FindQuery('*', 0, 100)))
         self.assertTrue(len(nodes) > 0)
 
