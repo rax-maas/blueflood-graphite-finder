@@ -20,7 +20,8 @@ try:
     auth_user_name = os.environ['AUTH_USER_NAME']
     auth_tenant = os.environ['AUTH_TENANT']
     bf_url = os.environ['BLUEFLOOD_URL']
-    print "Authenticating using user_name=" + auth_user_name + ", tenant=" + auth_tenant + ", url=" + bf_url 
+    print "Authenticating using user_name=" + auth_user_name + \
+          ", tenant=" + auth_tenant + ", url=" + bf_url
     auth_config = {
         'blueflood': {
             'authentication_module': 'blueflood_graphite_finder.rax_auth',
@@ -152,7 +153,7 @@ class BluefloodTests(TestCase):
         type(auth.auth).get_current_UTC = self.orig_get_current_UTC
         type(auth.auth).do_auth = self.orig_do_auth
 
-    @unittest.skip("need to rework this test so it doesnt make calls to external system")
+    @unittest.skip("rework this test so it has no calls to external system")
     def test_finder(self):
         if no_auth_config:
             print "\nRunning NO_AUTH tests"
