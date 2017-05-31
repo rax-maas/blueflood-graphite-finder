@@ -1,7 +1,8 @@
 language: python
-env:
- - TOXENV=py27 BLUEFLOOD_URL=$BLUEFLOOD_URL AUTH_USER_NAME=$AUTH_USER_NAME AUTH_TENANT=$AUTH_TENANT AUTH_API_KEY=$AUTH_API_KEY
 install:
-  - travis_retry pip install tox==1.6.1
+- travis_retry pip install tox==1.6.1
 script:
-  - tox
+- tox
+env:
+  global:
+    secure: mD9m/zSicZ2KIKhpsfGNLeYqmPtoRhetmgt9pKRu+vrJYR6gXErqdTWGswp+WdTz4cpI7wrgjkZwXlF5gBDIK/QpEM83iVn/hfWEs6RD9rwb+CmrtbGtgRp7CJVioEJBlo3FB01uAgfXAlr0HskhHQHZgbM1XM/2Vhd6yhVYN2VESkC+zr+pNs/WgEcDBNeL3QLCRCu6UiCbbyfHbYkc4+o1fv28kttdE+YKhlvzf+vdd/GB1CnJrc3ICvx9gI1xCkgZEgvOvKIdnvlPEWmn9KN3L+NYAykAMDozFbLcCryvoJKKbONhkG2aqvh8bFQjTTsyEaf0dlNriJ6x1U8Oo6pl8XYrCkuaVZ5H7MJZCx+A8t0wvo9s8rvWhuF1YXmPnXVo3wwfuCCq3X4XmMkijfQNf8B1Dqr0tlAcXuPn4hKCHAp1DSAUxXbkd+kBxispL0aI9vf1J5NYveca1itgM21zP8ZZ21o5CURPd/JRwW0RgmhwS4e7KpF9YADegbyNSTYcnP4cjfX72Ece2fJ67dMkh914Gm6R6JMvdfTg0Km9mt0/W3PpOUMLEgCoX+1bFjd6vAkl2rzqLHEtvuJKis3exnmP7DTEgNmIjknEt5O0pVKjKjFg1oPnh14N4lnqJM6aINqiHqQTY2MAJv/Bzg+WiqW28JsbrnW71JQSenM=
