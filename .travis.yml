@@ -7,4 +7,4 @@ script:
   - export AUTH_USER_NAME=$AUTH_USER_NAME
   - export AUTH_API_KEY=$AUTH_API_KEY
   - export TOXENV=py27
-  - travis_retry tox
+  - tox
