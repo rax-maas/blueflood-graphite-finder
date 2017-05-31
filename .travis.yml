@@ -4,4 +4,4 @@ install:
 script:
 - export NO_BLUEFLOOD_URL=$BLUEFLOOD_URL
 - export NO_AUTH_TENANT=$AUTH_TENANT
-- tox
+- travis_retry tox
