@@ -2,6 +2,6 @@ language: python
 install:
 - travis_retry pip install tox==1.6.1
 script:
-- export BLUEFLOOD_URL=$BLUEFLOOD_URL
+- export NO_BLUEFLOOD_URL=$BLUEFLOOD_URL
 - export NO_AUTH_TENANT=$AUTH_TENANT
 - tox
