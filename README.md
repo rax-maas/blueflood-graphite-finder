@@ -11,7 +11,6 @@ The BF finder is the graphite plugin that allows graphite and grafana to use blu
 
 In your graphite-api config file:
 
-
     finders:
       - blueflood_graphite_finder.blueflood.TenantBluefloodFinder
     blueflood:
@@ -72,5 +71,6 @@ To run nosetests, run the below commands
     
 ## Changelog
     
+* 1.0.2 (2017-05-31) Fix Grafana display issue for Counters
 * 1.0.1 (2016-03-25) Performance improvements for /metrics/find API.
 * 1.0.0 (2016-03-23) Base version. 
