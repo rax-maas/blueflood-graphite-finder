@@ -1,7 +1,7 @@
 Blueflood Finder
 ================
 
-The BF finder is the graphite plugin that allows graphite and grafana to use blueflood as a backend.
+The Blueflood finder is the graphite plugin that allows graphite and grafana to use blueflood as a backend.
 
 ## Installation
 
@@ -21,6 +21,25 @@ In your graphite-api config file:
       authentication_class: BluefloodAuth
       urls:
         - https://blueflood-host:port
+
+### Caveat
+Blueflood Finder simulates graphite-api. This means we fetch data from blueflood and transform it to graphite-api format:
+http://graphite-api.readthedocs.io/en/latest/api.html#rawdata
+
+The graphite-api format is:
+```
+mycollector.server01.cpuUsage,1306217160,1306217460,60|0.0,0.00666666520965,0.00666666624282,0.0,0.0133345399694
+```
+The fields are:
+```
+metric_name,startTime,stopTime,step|comma_separated_values
+```
+
+The ```step``` field is in seconds and it is the precision that Grafana or graphite-web will display the graph. If ```step``` is 1, then it will graph the points in 1 second precision.
+
+Blueflood Finder's most granular ```step``` is 60 seconds (for FULL resolution) and its coarsest ```step``` is 86400 (for 1440MIN resolution). 
+
+This means: if you are publishing data more frequently than 60 seconds, they will not show up in Grafana or graphite-web. The best is to adjust your collectors (for example statsd) to flush data every 60 seconds. 
 
 ## Setup
 
@@ -42,7 +61,7 @@ vagrant vm use the below commands.
     
 To access grafana, bring your browser up and access the URL: http://192.168.50.4    
     
-###Tests
+### Tests
 
 The tests require the following environment variables. Atleast one of no-auth or auth test variables should be set.
 
