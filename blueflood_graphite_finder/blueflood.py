@@ -42,9 +42,9 @@ secs_per_res = {
 
 def calc_res(start, stop):
     # make an educated guess about the likely number of data points returned.
-    num_points = (stop - start) 
+    num_points = (stop - start)
     res = 'FULL'
-    # These numbers are the number of points requested, based on the time 
+    # These numbers are the number of points requested, based on the time
     # range requested. The following is the mapping between time range
     # requested and blueflood resolution:
     #     * FULL:    if time range requested is less than 30 min
@@ -53,16 +53,16 @@ def calc_res(start, stop):
     #     * MIN60:   if time range requested is less than 6 hour
     #     * MIN240:  if time range requested is less than 48 hour
     #     * MIN1440: if time range requested is > 48 hour
-    if num_points > 1800:
-        res = 'MIN5'
-    elif num_points > 3600:
-        res = 'MIN20'
-    elif num_points > 7200:
-        res = 'MIN60'
+    if num_points > 172800:
+        res = 'MIN1440'
     elif num_points > 21600:
         res = 'MIN240'
-    elif num_points > 172800:
-        res = 'MIN1440'
+    elif num_points > 7200:
+        res = 'MIN60'
+    elif num_points > 3600:
+        res = 'MIN20'
+    elif num_points > 1800:
+        res = 'MIN5'
     logger.debug("calc_res: num_points=%d, res=%s", num_points, res)
     return res
 
@@ -426,7 +426,9 @@ class BluefloodClient(object):
         if (not len(v_iter)) or not data_key.exists(v_iter[0]):
             return False
         datapoint_ts = v_iter[0]['timestamp'] / 1000
-        logger.debug("current_datapoint_valid: datapoint_ts=%d, ts=%d, step=%d", datapoint_ts, ts, step)
+        logger.debug("current_datapoint_valid: " +
+                     "datapoint_ts=%d, ts=%d, step=%d",
+                     datapoint_ts, ts, step)
         if (datapoint_ts < (ts + step)):
             return True
         return False
@@ -485,7 +487,8 @@ class BluefloodClient(object):
                 #  and set it to point to the current position
                 if (l > 0) and (ret_arr[l - 1] is not None):
                     current_fixup = l - 1
-                logger.debug("l=%d, current_fixup=%d, ret_arr.len=%d", l, current_fixup, len(ret_arr))
+                logger.debug("l=%d, current_fixup=%d, ret_arr.len=%d",
+                             l, current_fixup, len(ret_arr))
                 ret_arr.append(None)
 
         # I'm not sure why we need to call this method.
@@ -496,7 +499,7 @@ class BluefloodClient(object):
         # this:
         #      100,100,100,100,100,100
         # which messes up the Total in Grafana
-        #self.fixup(ret_arr, fixup_list)
+        # self.fixup(ret_arr, fixup_list)
         return ret_arr
 
     def get_multi_endpoint(self, endpoint, tenant):

@@ -247,6 +247,8 @@ class BluefloodTests(TestCase):
         # should be 7th element
         fourth_timestamp = first_timestamp + (7000 * step + 1)
 
+        print "first=%d, fourth=%d" % (first_timestamp, fourth_timestamp)
+
         metric1 = self.metric1
         metric2 = self.metric2
         if self.bfc.enable_submetrics:
@@ -265,13 +267,13 @@ class BluefloodTests(TestCase):
                      u'numPoints': 1}],
                     u'metric': self.metric1, u'type': u'number',
                     u'unit': u'unknown'},
-                    {u'data': [
-                        {u'timestamp': first_timestamp, u'average': 6421.18,
-                         u'numPoints': 1},
-                        {u'timestamp': second_timestamp, u'average': 26421.18,
-                         u'numPoints': 1}],
-                        u'metric': self.metric2, u'type': u'number',
-                        u'unit': u'unknown'}])
+                 {u'data': [
+                    {u'timestamp': first_timestamp, u'average': 6421.18,
+                     u'numPoints': 1},
+                    {u'timestamp': second_timestamp, u'average': 26421.18,
+                     u'numPoints': 1}],
+                    u'metric': self.metric2, u'type': u'number',
+                    u'unit': u'unknown'}])
 
     def make_enum_data(self, start, step):
         # should be 0th element in response
@@ -313,8 +315,8 @@ class BluefloodTests(TestCase):
                              {nodes[1].path: [6421.18, None, None, None, None,
                                               None, None, None, None],
                               nodes[0].path: [None, None, None, None, 4449.97,
-                                              7783.303333333333,
-                                              11116.636666666667, 14449.97,
+                                              None,
+                                              None, 14449.97,
                                               None]})
 
         # check that it handles unfound metric correctly
@@ -322,18 +324,9 @@ class BluefloodTests(TestCase):
         dictionary = self.bfc.gen_dict(nodes, responses, start, end, step)
         self.assertDictEqual(dictionary,
                              {nodes[0].path: [None, None, None, None, 4449.97,
-                                              7783.303333333333,
-                                              11116.636666666667, 14449.97,
+                                              None, None,
+                                              14449.97,
                                               None]})
-
-        # check enums
-        nodes, responses = self.make_enum_data(start, step)
-        dictionary = self.bfc.gen_dict(nodes, responses, start, end, step)
-        self.assertDictEqual(dictionary,
-                             {nodes[1].path: [None, None, None, None, 7, 5, 4,
-                                              3, None],
-                              nodes[0].path: [None, None, None, None, 13, 12,
-                                              11, 11, None]})
 
         # now with submetrics
         self.bfc.enable_submetrics = True
@@ -343,18 +336,8 @@ class BluefloodTests(TestCase):
                              {nodes[1].path: [6421.18, None, None, None, None,
                                               None, None, None, None],
                               nodes[0].path: [None, None, None, None, 4449.97,
-                                              7783.303333333333,
-                                              11116.636666666667, 14449.97,
+                                              None, None, 14449.97,
                                               None]})
-
-        # check enums with submetrics
-        nodes, responses = self.make_enum_data(start, step)
-        dictionary = self.bfc.gen_dict(nodes, responses, start, end, step)
-        self.assertDictEqual(dictionary,
-                             {nodes[1].path: [None, None, None, None, 7, 5, 4,
-                                              3, None],
-                              nodes[0].path: [None, None, None, None, 13, 12,
-                                              11, 11, None]})
 
     def test_gen_responses(self):
         step = 3000
@@ -585,52 +568,16 @@ class BluefloodTests(TestCase):
         nodes, responses = self.make_data(start, step)
         with requests_mock.mock() as m:
             m.post(endpoint, json={'metrics': responses}, status_code=200)
+            # We ask for 1426147000 - 1426120000 == 27000 seconds worth of
+            # data, this falls under MIN240 granularity, i.e: 14400
             time_info, dictionary = self.finder.fetch_multi(nodes, start, end)
-            self.assertSequenceEqual(time_info, (1426120000, 1426147300, 300))
+            self.assertSequenceEqual(time_info,
+                                     (1426120000, 1426161400, 14400))
             self.assertDictEqual(dictionary,
                                  {'e.f.g':
-                                  [6421.18, 8643.402222222223,
-                                   10865.624444444446, 13087.846666666668,
-                                   15310.06888888889, 17532.291111111113,
-                                   19754.513333333336, 21976.73555555556,
-                                   24198.95777777778, 26421.18,
-                                   None, None, None, None, None, None,
-                                   None, None, None, None, None, None,
-                                   None, None, None, None, None, None,
-                                   None, None, None, None, None, None,
-                                   None, None, None, None, None, None,
-                                   None, None, None, None, None, None,
-                                   None, None, None, None, None, None,
-                                   None, None, None, None, None, None,
-                                   None, None, None, None, None, None,
-                                   None, None, None, None, None, None,
-                                   None, None, None, None, None, None,
-                                   None, None, None, None, None, None,
-                                   None, None, None, None, None, None,
-                                   None, None, None],
+                                  [6421.18, None, None],
                                   'a.b.c':
-                                  [None, None, None, None, None, None,
-                                   None, None, None, None, None, None,
-                                   None, None, None, None, None, None,
-                                   None, None, None, None, None, None,
-                                   None, None, None, None, None, None,
-                                   None, None, None, None, None, None,
-                                   None, None, None, None, None, None,
-                                   None, None, None, None, None, None,
-                                   None, 4449.97, 4926.160476190476,
-                                   5402.350952380953, 5878.541428571429,
-                                   6354.731904761905, 6830.922380952381,
-                                   7307.112857142857, 7783.303333333333,
-                                   8259.49380952381, 8735.684285714287,
-                                   9211.874761904764, 9688.065238095242,
-                                   10164.255714285719, 10640.446190476196,
-                                   11116.636666666673, 11592.82714285715,
-                                   12069.017619047627, 12545.208095238104,
-                                   13021.39857142858, 13497.589047619058,
-                                   13973.779523809535, 14449.97, None,
-                                   None, None, None, None, None, None,
-                                   None, None, None, None, None, None,
-                                   None, None, None, None, None, None,
+                                  [None, 4449.97,
                                    None]})
 
         with requests_mock.mock() as m:
@@ -641,10 +588,10 @@ class BluefloodTests(TestCase):
 
     def test_calc_res(self):
         start = 0
-        stop1 = secs_per_res['MIN240'] * 801
-        stop2 = stop1 - 1
-        self.assertEqual(calc_res(start, stop1), 'MIN1440')
-        self.assertEqual(calc_res(start, stop2), 'MIN240')
+        stop1 = secs_per_res['MIN240'] * 12
+        stop2 = stop1 + 1
+        self.assertEqual(calc_res(start, stop1), 'MIN240')
+        self.assertEqual(calc_res(start, stop2), 'MIN1440')
 
     def test_process_path(self):
         b = BluefloodClient("host", "tenant", False, None)
@@ -749,14 +696,14 @@ class BluefloodTests(TestCase):
 
         ret = b.process_path(values, start_time, end_time, step, data_key)
         self.assertSequenceEqual(ret, (
-            None, None, first_val, first_val + 4, first_val + 8, second_val,
-            second_val + 4, second_val + 8, third_val, None, None))
+            None, None, first_val, None, None, second_val,
+            None, None, third_val, None, None))
 
         ret = b.process_path(enum_values, start_time, end_time, step,
                              enum_data_key)
         self.assertSequenceEqual(ret, (
-            None, None, first_val, first_val + 4, first_val + 8, second_val,
-            second_val + 4, second_val + 8, third_val, None, None))
+            None, None, first_val, None, None, second_val,
+            None, None, third_val, None, None))
 
 
 if __name__ == '__main__':
