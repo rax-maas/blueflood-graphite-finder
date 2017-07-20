@@ -29,8 +29,10 @@ except ImportError:
 
 
 secs_per_res = {
-    'FULL': 60,
-    # Setting this to 60 seems to best emulate graphite/whisper for dogfooding
+    # This used to be 60 seconds but that is too coarse for Grafana display.
+    # Most collectors/agents post metrics more often than 60 seconds.
+    # Setting this now to 1 second.
+    'FULL': 1,
     'MIN5': 5 * 60,
     'MIN20': 20 * 60,
     'MIN60': 60 * 60,
@@ -40,23 +42,28 @@ secs_per_res = {
 
 def calc_res(start, stop):
     # make an educated guess about the likely number of data points returned.
-    num_points = (stop - start) / 60
+    num_points = (stop - start)
     res = 'FULL'
-    if num_points > 400:
-        num_points = (stop - start) / secs_per_res['MIN5']
-        res = 'MIN5'
-    if num_points > 800:
-        num_points = (stop - start) / secs_per_res['MIN20']
-        res = 'MIN20'
-    if num_points > 800:
-        num_points = (stop - start) / secs_per_res['MIN60']
-        res = 'MIN60'
-    if num_points > 800:
-        num_points = (stop - start) / secs_per_res['MIN240']
-        res = 'MIN240'
-    if num_points > 800:
-        num_points = (stop - start) / secs_per_res['MIN1440']
+    # These numbers are the number of points requested, based on the time
+    # range requested. The following is the mapping between time range
+    # requested and blueflood resolution:
+    #     * FULL:    if time range requested is less than 30 min
+    #     * MIN5:    if time range requested is less than 1 hour
+    #     * MIN20:   if time range requested is less than 2 hour
+    #     * MIN60:   if time range requested is less than 6 hour
+    #     * MIN240:  if time range requested is less than 48 hour
+    #     * MIN1440: if time range requested is > 48 hour
+    if num_points > 172800:
         res = 'MIN1440'
+    elif num_points > 21600:
+        res = 'MIN240'
+    elif num_points > 7200:
+        res = 'MIN60'
+    elif num_points > 3600:
+        res = 'MIN20'
+    elif num_points > 1800:
+        res = 'MIN5'
+    logger.debug("calc_res: num_points=%d, res=%s", num_points, res)
     return res
 
 
@@ -117,6 +124,8 @@ class TenantBluefloodFinder(threading.Thread):
         logger.debug("BF finder submetrics enabled: %s", enable_submetrics)
 
     def run(self):
+        # TODO: enum feature has been removed from Blueflood. We need to
+        # remove enum related code here too
         # This separate thread allows queued reads to happen in the background
         logger.debug("BF enum thread started: ")
         while not self.exit_flag:
@@ -160,6 +169,8 @@ class TenantBluefloodFinder(threading.Thread):
         return "%s/v2.0/%s/metrics/search?include_enum_values=true" % (
             endpoint, tenant)
 
+    # TODO: enum feature has been removed from Blueflood. We need to
+    # remove enum related code here too
     def find_metrics_with_enum_values(self, query):
         # BF search command that returns enum values as well as metric names
         logger.info("BluefloodClient.find_metrics: %s", str(query))
@@ -187,6 +198,9 @@ class TenantBluefloodFinder(threading.Thread):
         # BF search command that returns metric names without enum values
         return self.find_metrics_with_enum_values(query)
 
+    # TODO: This method might be a special handling that we had
+    # to do to support enum. But enum feature support has been
+    # removed from Blueflood. This needs to be removed as well.
     def find_nodes_with_submetrics(self, query):
         # By definition, when using submetrics, the names of all Leafnodes
         # must end in a submetric alias BF doesn't know about the submetric
@@ -408,6 +422,7 @@ class BluefloodClient(object):
         if not len(v_iter):
             return False
         datapoint_ts = v_iter[0]['timestamp'] / 1000
+        logger.debug("ts=%d, datapoint_ts=%d", ts, datapoint_ts)
         if (ts > datapoint_ts):
             return True
         return False
@@ -418,6 +433,9 @@ class BluefloodClient(object):
         if (not len(v_iter)) or not data_key.exists(v_iter[0]):
             return False
         datapoint_ts = v_iter[0]['timestamp'] / 1000
+        logger.debug("current_datapoint_valid: " +
+                     "datapoint_ts=%d, ts=%d, step=%d",
+                     datapoint_ts, ts, step)
         if (datapoint_ts < (ts + step)):
             return True
         return False
@@ -476,8 +494,19 @@ class BluefloodClient(object):
                 #  and set it to point to the current position
                 if (l > 0) and (ret_arr[l - 1] is not None):
                     current_fixup = l - 1
+                logger.debug("l=%d, current_fixup=%d, ret_arr.len=%d",
+                             l, current_fixup, len(ret_arr))
                 ret_arr.append(None)
-        self.fixup(ret_arr, fixup_list)
+
+        # I'm not sure why we need to call this method.
+        # This function messes up Grafana. If you have data
+        # like this:
+        #      100,None,None,None,None,100
+        # the function replaces the None with values and return
+        # this:
+        #      100,100,100,100,100,100
+        # which messes up the Total in Grafana
+        # self.fixup(ret_arr, fixup_list)
         return ret_arr
 
     def get_multi_endpoint(self, endpoint, tenant):
@@ -509,8 +538,12 @@ class BluefloodClient(object):
         payload = {
             'from': start_time * 1000,
             'to': end_time * 1000,
-            'points': 1000
         }
+        # We want to fetch data using resolution instead of points.
+        # With points, blueflood will calculate the resolution, which
+        # may not be in synch with our notion of resolution here, which
+        # may cause data to not be displayed correctly in Grafana
+        payload['resolution'] = res
         if self.enable_submetrics:
             payload['select'] = ','.join(self.submetric_aliases.values())
         return payload
@@ -628,6 +661,7 @@ class BluefloodClient(object):
         try:
             res = calc_res(start_time, end_time)
             step = secs_per_res[res]
+            logger.debug("fetch_multi: res=%s, step=%d", res, step)
             payload = self.gen_payload(start_time, end_time, res)
             # Limit size of MPlot requests by dividing into groups
             groups = self.gen_groups(nodes)

@@ -22,7 +22,6 @@ In your graphite-api config file:
       urls:
         - https://blueflood-host:port
 
-### Caveat
 Blueflood Finder simulates graphite-api. This means we fetch data from blueflood and transform it to graphite-api format:
 http://graphite-api.readthedocs.io/en/latest/api.html#rawdata
 
@@ -35,11 +34,25 @@ The fields are:
 metric_name,startTime,stopTime,step|comma_separated_values
 ```
 
-The ```step``` field is in seconds and it is the precision that Grafana or graphite-web will display the graph. If ```step``` is 1, then it will graph the points in 1 second precision.
+The ```step``` field is in seconds and it is the precision that Grafana or graphite-web will display the graph. If ```step``` is 1, then it will graph the points in 1 second precision. It means the time difference between one value to the next value is 1 second.
 
-Blueflood Finder's most granular ```step``` is 60 seconds (for FULL resolution) and its coarsest ```step``` is 86400 (for 1440MIN resolution). 
+### Precisions 
+Blueflood Finder's most granular ```step``` is 1 seconds (for FULL resolution) and its coarsest ```step``` is 86400 (for 1440MIN resolution). 
 
-This means: if you are publishing data more frequently than 60 seconds, they will not show up in Grafana or graphite-web. The best is to adjust your collectors (for example statsd) to flush data every 60 seconds. 
+|Time Range           |Blueflood Resolution|
+|---------------------|--------------------|
+| <30 min             | FULL               |
+| >=30 min to 1 hour  | MIN5               |
+| 1 hour to 2 hours   | MIN20              |
+| 2 hours to 6 hours  | MIN60              |
+| 6 hours to 48 hours | MIN240             |
+| >= 48 hours         | MIN240             |
+
+### Caveat
+
+#### If you are publishing data more frequently than 1 second, they will not show up in Grafana or graphite-web. The best is to adjust your collectors (for example statsd) to flush data every 1 second. 
+
+#### When someone fetches the most recent data for more than 30 minutes, Blueflood Finder will start querying Blueflood for coarser/higher granularity data (i.e: resolution is MIN5, MIN20, MIN60, MIN240, or MIN1440). Data in this coarser/higher granularity buckets are only available after a certain time. This time is configurable in Blueflood via ROLLUP_MILLIS_DELAY. For example, if ROLLUP_MILLIS_DELAY in Blueflood is set to 10 minutes, then when you request data for "Last 1 hour", the first ~10 minutes or so of that data may not be present yet.
 
 ## Setup
 
@@ -90,6 +103,7 @@ To run nosetests, run the below commands
     
 ## Changelog
     
+* 1.1.0 (2017-07-14) Lower precision from 60s to 1s, fix Grafana missing data
 * 1.0.2 (2017-05-31) Fix Grafana display issue for Counters
 * 1.0.1 (2016-03-25) Performance improvements for /metrics/find API.
 * 1.0.0 (2016-03-23) Base version. 
