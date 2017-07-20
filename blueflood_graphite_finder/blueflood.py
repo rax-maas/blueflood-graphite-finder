@@ -124,7 +124,7 @@ class TenantBluefloodFinder(threading.Thread):
         logger.debug("BF finder submetrics enabled: %s", enable_submetrics)
 
     def run(self):
-        # TODO: enum feature has been removed from Blueflood. We need to 
+        # TODO: enum feature has been removed from Blueflood. We need to
         # remove enum related code here too
         # This separate thread allows queued reads to happen in the background
         logger.debug("BF enum thread started: ")
@@ -169,7 +169,7 @@ class TenantBluefloodFinder(threading.Thread):
         return "%s/v2.0/%s/metrics/search?include_enum_values=true" % (
             endpoint, tenant)
 
-    # TODO: enum feature has been removed from Blueflood. We need to 
+    # TODO: enum feature has been removed from Blueflood. We need to
     # remove enum related code here too
     def find_metrics_with_enum_values(self, query):
         # BF search command that returns enum values as well as metric names
@@ -198,8 +198,8 @@ class TenantBluefloodFinder(threading.Thread):
         # BF search command that returns metric names without enum values
         return self.find_metrics_with_enum_values(query)
 
-    # TODO: This method might be a special handling that we had 
-    # to do to support enum. But enum feature support has been 
+    # TODO: This method might be a special handling that we had
+    # to do to support enum. But enum feature support has been
     # removed from Blueflood. This needs to be removed as well.
     def find_nodes_with_submetrics(self, query):
         # By definition, when using submetrics, the names of all Leafnodes
