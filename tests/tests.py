@@ -154,7 +154,6 @@ class BluefloodTests(TestCase):
         type(auth.auth).get_current_UTC = self.orig_get_current_UTC
         type(auth.auth).do_auth = self.orig_do_auth
 
-    @unittest.skip("rework this test so it has no calls to external system")
     def test_finder(self):
         if no_auth_config:
             print "\nRunning NO_AUTH tests"
