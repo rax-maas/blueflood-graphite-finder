@@ -13,6 +13,7 @@ import os.path
 import importlib
 from blueflood_graphite_finder import auth
 
+print 'bf finder test version 13'
 logger = logging.getLogger('blueflood_finder')
 
 try:
@@ -42,21 +43,26 @@ def calc_res(start, stop):
     # make an educated guess about the likely number of data points returned.
     num_points = (stop - start) / 60
     res = 'FULL'
-    if num_points > 400:
-        num_points = (stop - start) / secs_per_res['MIN5']
-        res = 'MIN5'
-    if num_points > 800:
-        num_points = (stop - start) / secs_per_res['MIN20']
-        res = 'MIN20'
-    if num_points > 800:
-        num_points = (stop - start) / secs_per_res['MIN60']
-        res = 'MIN60'
-    if num_points > 800:
-        num_points = (stop - start) / secs_per_res['MIN240']
-        res = 'MIN240'
-    if num_points > 800:
-        num_points = (stop - start) / secs_per_res['MIN1440']
+    # These numbers are the number of points requested, based on the time
+    # range requested. The following is the mapping between time range
+    # requested and blueflood resolution:
+    #     * FULL:    if time range requested is less than 6.6 hours
+    #     * MIN5:    if time range requested is less than 66 hours
+    #     * MIN20:   if time range requested is less than 1.5 weeks
+    #     * MIN60:   if time range requested is less than 4.5 weeks
+    #     * MIN240:  if time range requested is less than 18 weeks
+    #     * MIN1440: if time range requested is >  18 weeks
+    if num_points > 181440:
         res = 'MIN1440'
+    elif num_points > 45360:
+        res = 'MIN240'
+    elif num_points > 15120:
+        res = 'MIN60'
+    elif num_points > 3960:
+        res = 'MIN20'
+    elif num_points > 400:
+        res = 'MIN5'
+    logger.debug("calc_res: num_points=%d, res=%s", num_points, res)
     return res
 
 
@@ -464,7 +470,7 @@ class BluefloodClient(object):
             while self.current_datapoint_passed(v_iter, ts):
                 v_iter = v_iter[1:]
             if self.current_datapoint_valid(v_iter, data_key, ts, step):
-                ret_arr.append(data_key.get_datapoints(v_iter[0]))
+                ret_arr.append(data_key.get_datapoints(v_iter[0], step))
                 if current_fixup is not None:
                     # we have found the end of the current fixup, so add the
                     # start and end of the current fixup into fixup list
@@ -509,8 +515,12 @@ class BluefloodClient(object):
         payload = {
             'from': start_time * 1000,
             'to': end_time * 1000,
-            'points': 1000
         }
+        # We want to fetch data using resolution instead of points.
+        # With points, blueflood will calculate the resolution, which
+        # may not be in synch with our notion of resolution here, which
+        # may cause data to not be displayed correctly in Grafana
+        payload['resolution'] = res
         if self.enable_submetrics:
             payload['select'] = ','.join(self.submetric_aliases.values())
         return payload
@@ -647,6 +657,13 @@ class TenantBluefloodLeafNode(LeafNode):
     __fetch_multi__ = 'tenant_blueflood'
 
 
+def step_correction(value, step):
+    if value is None:
+        return None
+    else:
+        return value/(step/60)
+
+
 class NonNestedDataKey(object):
     def __init__(self, key1):
         self.key1 = key1
@@ -654,11 +671,14 @@ class NonNestedDataKey(object):
     def exists(self, value):
         return self.key1 in value
 
-    def get_datapoints(self, value):
+    def get_datapoints(self, value, step):
         if not self.exists(value):
             return None
         else:
-            return value[self.key1]
+            if self.key1 in set(['average', 'sum', 'numPoints']):
+                return step_correction(value[self.key1], step)
+            else:
+                return value[self.key1]
 
 
 class NestedDataKey(object):
@@ -671,7 +691,7 @@ class NestedDataKey(object):
     def exists(self, value):
         return self.key1 in value and self.key2 in value[self.key1]
 
-    def get_datapoints(self, value):
+    def get_datapoints(self, value, step):
         if not self.exists(value):
             return None
         else:

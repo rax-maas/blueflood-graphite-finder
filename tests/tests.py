@@ -1,3 +1,7 @@
+from blueflood_graphite_finder.blueflood import TenantBluefloodFinder, \
+    TenantBluefloodReader, TenantBluefloodLeafNode, \
+    BluefloodClient, calc_res, NonNestedDataKey, NestedDataKey
+
 import datetime
 import logging.config
 import threading
@@ -7,9 +11,6 @@ from unittest import TestCase
 import os
 import requests_mock
 from blueflood_graphite_finder import auth
-from blueflood_graphite_finder.blueflood import TenantBluefloodFinder, \
-    TenantBluefloodReader, TenantBluefloodLeafNode, \
-    BluefloodClient, calc_res, secs_per_res, NonNestedDataKey, NestedDataKey
 
 logging_file = os.path.join(os.path.dirname(__file__), 'logging.ini')
 logging.config.fileConfig(logging_file)
@@ -238,6 +239,8 @@ class BluefloodTests(TestCase):
             groups = self.bfc.gen_groups([self.node1, self.node2])
 
     def make_data(self, start, step):
+        def step_correction(value, step):
+            return value * (step/60)
         # should be 0th element in response
         first_timestamp = start * 1000
         # should be skipped because it overlaps first_timestamp + 1000*step
@@ -258,17 +261,19 @@ class BluefloodTests(TestCase):
         return ([node1, node2],
                 [{u'data': [
                     {u'timestamp': third_timestamp,
-                     u'average': 4449.97,
+                     u'average': step_correction(4449.97, step),
                      u'numPoints': 1},
                     {u'timestamp': fourth_timestamp,
-                     u'average': 14449.97,
+                     u'average': step_correction(14449.97, step),
                      u'numPoints': 1}],
                     u'metric': self.metric1, u'type': u'number',
                     u'unit': u'unknown'},
                     {u'data': [
-                        {u'timestamp': first_timestamp, u'average': 6421.18,
+                        {u'timestamp': first_timestamp, u'average':
+                         step_correction(6421.18, step),
                          u'numPoints': 1},
-                        {u'timestamp': second_timestamp, u'average': 26421.18,
+                        {u'timestamp': second_timestamp, u'average':
+                         step_correction(26421.18, step),
                          u'numPoints': 1}],
                         u'metric': self.metric2, u'type': u'number',
                         u'unit': u'unknown'}])
@@ -589,11 +594,11 @@ class BluefloodTests(TestCase):
             self.assertSequenceEqual(time_info, (1426120000, 1426147300, 300))
             self.assertDictEqual(dictionary,
                                  {'e.f.g':
-                                  [6421.18, 8643.402222222223,
-                                   10865.624444444446, 13087.846666666668,
-                                   15310.06888888889, 17532.291111111113,
-                                   19754.513333333336, 21976.73555555556,
-                                   24198.95777777778, 26421.18,
+                                  [64211.8, 86434.02222222222,
+                                   108656.24444444444, 130878.46666666666,
+                                   153100.6888888889, 175322.9111111111,
+                                   197545.13333333333, 219767.35555555555,
+                                   241989.57777777777, 264211.8,
                                    None, None, None, None, None, None,
                                    None, None, None, None, None, None,
                                    None, None, None, None, None, None,
@@ -617,17 +622,17 @@ class BluefloodTests(TestCase):
                                    None, None, None, None, None, None,
                                    None, None, None, None, None, None,
                                    None, None, None, None, None, None,
-                                   None, 4449.97, 4926.160476190476,
-                                   5402.350952380953, 5878.541428571429,
-                                   6354.731904761905, 6830.922380952381,
-                                   7307.112857142857, 7783.303333333333,
-                                   8259.49380952381, 8735.684285714287,
-                                   9211.874761904764, 9688.065238095242,
-                                   10164.255714285719, 10640.446190476196,
-                                   11116.636666666673, 11592.82714285715,
-                                   12069.017619047627, 12545.208095238104,
-                                   13021.39857142858, 13497.589047619058,
-                                   13973.779523809535, 14449.97, None,
+                                   None, 44499.7, 49261.60476190476,
+                                   54023.509523809524, 58785.41428571429,
+                                   63547.31904761905, 68309.22380952381,
+                                   73071.12857142858, 77833.03333333334,
+                                   82594.9380952381, 87356.84285714287,
+                                   92118.74761904763, 96880.6523809524,
+                                   101642.55714285716, 106404.46190476192,
+                                   111166.36666666668, 115928.27142857145,
+                                   120690.17619047621, 125452.08095238097,
+                                   130213.98571428574, 134975.89047619049,
+                                   139737.79523809525, 144499.7, None,
                                    None, None, None, None, None, None,
                                    None, None, None, None, None, None,
                                    None, None, None, None, None, None,
@@ -641,7 +646,8 @@ class BluefloodTests(TestCase):
 
     def test_calc_res(self):
         start = 0
-        stop1 = secs_per_res['MIN240'] * 801
+        # 1 minute more than 18 weeks:
+        stop1 = (60 * 60 * 24 * 7 * 18) + 60
         stop2 = stop1 - 1
         self.assertEqual(calc_res(start, stop1), 'MIN1440')
         self.assertEqual(calc_res(start, stop2), 'MIN240')
