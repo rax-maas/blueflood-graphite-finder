@@ -13,7 +13,6 @@ import os.path
 import importlib
 from blueflood_graphite_finder import auth
 
-print 'bf finder test version 13'
 logger = logging.getLogger('blueflood_finder')
 
 try:
@@ -487,6 +486,8 @@ class BluefloodClient(object):
                 if (l > 0) and (ret_arr[l - 1] is not None):
                     current_fixup = l - 1
                 ret_arr.append(None)
+        #statsd counters are zeroed each time they are flushed, so they can't be interpolated:
+        # https://github.com/etsy/statsd/blob/master/docs/metric_types.md#counting
         if not self.enable_statsd:
             self.fixup(ret_arr, fixup_list)
         return ret_arr
@@ -662,6 +663,8 @@ class TenantBluefloodLeafNode(LeafNode):
     __fetch_multi__ = 'tenant_blueflood'
 
 
+# The rollup values are multiplied by the length of the rollup.  For example, 5 minute rollups
+#  have the sum of the counts for all 5 minutes.  This normalizes them.
 def step_correction(value, step):
     if value is None:
         return None
