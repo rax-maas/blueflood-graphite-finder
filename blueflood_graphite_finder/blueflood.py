@@ -64,13 +64,12 @@ def calc_res(start, stop):
     logger.debug("calc_res: num_points=%d, res=%s", num_points, res)
     return res
 
-
 class TenantBluefloodFinder(threading.Thread):
     __fetch_multi__ = 'tenant_blueflood'
     __fetch_events__ = 'tenant_blueflood'
 
     def __init__(self, config=None):
-        logger.debug("Blueflood Finder v31")
+        logger.info("Blueflood Finder v1.1.1")
         threading.Thread.__init__(self)
         if os.path.isfile("/root/pdb-flag"):
             import remote_pdb
@@ -390,6 +389,7 @@ class BluefloodClient(object):
         self.host = host
         self.tenant = tenant
         self.enable_statsd = enable_statsd
+        logger.info('Blueflood Finder statsd ' + str(self.enable_statsd))
         self.enable_submetrics = enable_submetrics
         self.submetric_aliases = submetric_aliases
         # This is the maximum number of json characters permitted by the
