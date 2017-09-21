@@ -126,7 +126,7 @@ class BluefloodTests(TestCase):
         self.bfc = BluefloodClient(self.finder.bf_query_endpoint,
                                    self.finder.tenant,
                                    self.finder.enable_submetrics,
-                                   self.finder.submetric_aliases)
+                                   self.finder.submetric_aliases, False)
         auth.set_auth(None)
 
     def run_find(self, finder):
@@ -652,7 +652,7 @@ class BluefloodTests(TestCase):
         self.assertEqual(calc_res(start, stop2), 'MIN240')
 
     def test_process_path(self):
-        b = BluefloodClient("host", "tenant", False, None)
+        b = BluefloodClient("host", "tenant", False, None, False)
         step = 100
         big_step = step * 1000
         val_step = 12
@@ -762,6 +762,35 @@ class BluefloodTests(TestCase):
         self.assertSequenceEqual(ret, (
             None, None, first_val, first_val + 4, first_val + 8, second_val,
             second_val + 4, second_val + 8, third_val, None, None))
+
+    def test_process_path_with_statsd(self):
+        b = BluefloodClient("host", "tenant", False, None, True)
+        step = 100
+        big_step = step * 1000
+        val_step = 12
+        first_time = 1385074800000
+        first_val = 48
+        second_val = first_val + val_step
+        third_val = second_val + val_step
+        data_key = NonNestedDataKey(u'average')
+
+        # test start and end outside of data and no interpolation in the middle
+        second_time = first_time + (3 * big_step)
+        third_time = second_time + (3 * big_step)
+        start_time = first_time - (2 * big_step)
+        start_time /= 1000
+        end_time = third_time + (2 * big_step)
+        end_time = (end_time / 1000) + 1
+        values = [{u'timestamp': first_time, u'average': first_val,
+                   u'numPoints': 97},
+                  {u'timestamp': second_time, u'average': second_val,
+                   u'numPoints': 3},
+                  {u'timestamp': third_time, u'average': third_val,
+                   u'numPoints': 3}]
+        ret = b.process_path(values, start_time, end_time, step, data_key)
+        self.assertSequenceEqual(ret, (
+            None, None, first_val, None, None, second_val,
+            None, None, third_val, None, None))
 
 
 if __name__ == '__main__':

@@ -83,6 +83,7 @@ class TenantBluefloodFinder(threading.Thread):
             authentication_module = bf_config.get('authentication_module',
                                                   None)
             authentication_class = bf_config.get('authentication_class', None)
+            enable_statsd = bf_config.get('enable_statsd', False)
             enable_submetrics = bf_config.get('enable_submetrics', False)
             submetric_aliases = bf_config.get('submetric_aliases', {})
         else:
@@ -117,7 +118,8 @@ class TenantBluefloodFinder(threading.Thread):
         self.client = BluefloodClient(self.bf_query_endpoint,
                                       self.tenant,
                                       self.enable_submetrics,
-                                      self.submetric_aliases)
+                                      self.submetric_aliases,
+                                      enable_statsd)
         self.daemon = True
         self.start()
         logger.debug("BF finder submetrics enabled: %s", enable_submetrics)
@@ -384,9 +386,11 @@ class TenantBluefloodReader(object):
 
 
 class BluefloodClient(object):
-    def __init__(self, host, tenant, enable_submetrics, submetric_aliases):
+    def __init__(self, host, tenant, enable_submetrics, submetric_aliases,
+                 enable_statsd):
         self.host = host
         self.tenant = tenant
+        self.enable_statsd = enable_statsd
         self.enable_submetrics = enable_submetrics
         self.submetric_aliases = submetric_aliases
         # This is the maximum number of json characters permitted by the
@@ -483,7 +487,8 @@ class BluefloodClient(object):
                 if (l > 0) and (ret_arr[l - 1] is not None):
                     current_fixup = l - 1
                 ret_arr.append(None)
-        self.fixup(ret_arr, fixup_list)
+        if not self.enable_statsd:
+            self.fixup(ret_arr, fixup_list)
         return ret_arr
 
     def get_multi_endpoint(self, endpoint, tenant):
