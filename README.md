@@ -69,7 +69,7 @@ vagrant vm use the below commands.
     
 To access grafana, bring your browser up and access the URL: http://192.168.50.4    
 
-# Docker/grafana integration
+## Docker/grafana integration
 Tools for building a docker image are here:
 https://github.com/rackerlabs/docker-graphite-api-blueflood-finder
 
