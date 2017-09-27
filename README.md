@@ -102,7 +102,7 @@ To run nosetests, run the below commands
     
 ## Changelog
     
-* 1.1.1 (2017-09-21) Add enable_statsd
+* 1.1.2 (2017-09-21) Add enable_statsd
 * 1.0.2 (2017-05-31) Fix Grafana display issue for Counters
 * 1.0.1 (2016-03-25) Performance improvements for /metrics/find API.
 * 1.0.0 (2016-03-23) Base version. 
