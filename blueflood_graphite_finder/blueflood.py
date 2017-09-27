@@ -70,7 +70,7 @@ class TenantBluefloodFinder(threading.Thread):
     __fetch_events__ = 'tenant_blueflood'
 
     def __init__(self, config=None):
-        logger.info("Blueflood Finder v1.1.1")
+        logger.info("Blueflood Finder v1.1.2")
         threading.Thread.__init__(self)
         if os.path.isfile("/root/pdb-flag"):
             import remote_pdb
