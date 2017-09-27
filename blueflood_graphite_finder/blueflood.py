@@ -64,6 +64,7 @@ def calc_res(start, stop):
     logger.debug("calc_res: num_points=%d, res=%s", num_points, res)
     return res
 
+
 class TenantBluefloodFinder(threading.Thread):
     __fetch_multi__ = 'tenant_blueflood'
     __fetch_events__ = 'tenant_blueflood'
@@ -486,7 +487,8 @@ class BluefloodClient(object):
                 if (l > 0) and (ret_arr[l - 1] is not None):
                     current_fixup = l - 1
                 ret_arr.append(None)
-        #statsd counters are zeroed each time they are flushed, so they can't be interpolated:
+        # statsd counters are zeroed each time they are flushed, so
+        # they can't be interpolated:
         # https://github.com/etsy/statsd/blob/master/docs/metric_types.md#counting
         if not self.enable_statsd:
             self.fixup(ret_arr, fixup_list)
@@ -663,8 +665,9 @@ class TenantBluefloodLeafNode(LeafNode):
     __fetch_multi__ = 'tenant_blueflood'
 
 
-# The rollup values are multiplied by the length of the rollup.  For example, 5 minute rollups
-#  have the sum of the counts for all 5 minutes.  This normalizes them.
+# The rollup values are multiplied by the length of the rollup.  For
+#  example, 5 minute rollups have the sum of the counts for all 5
+#  minutes.  This normalizes them.
 def step_correction(value, step):
     if value is None:
         return None
