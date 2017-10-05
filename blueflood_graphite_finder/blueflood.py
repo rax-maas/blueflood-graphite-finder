@@ -70,7 +70,7 @@ class TenantBluefloodFinder(threading.Thread):
     __fetch_events__ = 'tenant_blueflood'
 
     def __init__(self, config=None):
-        logger.info("Blueflood Finder v1.1.2")
+        logger.info("Blueflood Finder v1.1.4")
         threading.Thread.__init__(self)
         if os.path.isfile("/root/pdb-flag"):
             import remote_pdb
@@ -686,7 +686,7 @@ class NonNestedDataKey(object):
         if not self.exists(value):
             return None
         else:
-            if self.key1 in set(['average', 'sum', 'numPoints']):
+            if self.key1 in set(['average']):
                 return step_correction(value[self.key1], step)
             else:
                 return value[self.key1]
