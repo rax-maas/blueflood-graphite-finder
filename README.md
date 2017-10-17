@@ -10,7 +10,7 @@ The Blueflood finder is the graphite plugin that allows graphite and grafana to 
 ## Using with graphite-api
 
 In your graphite-api config file:
-
+```
     finders:
       - blueflood_graphite_finder.blueflood.TenantBluefloodFinder
     blueflood:
@@ -21,6 +21,14 @@ In your graphite-api config file:
       authentication_class: BluefloodAuth
       urls:
         - https://blueflood-host:port
+```
+Note that there are two common ways of sending data to blueflood, either statsd or the blueflood-carbon-forwarder: https://github.com/rackerlabs/blueflood-carbon-forwarder.
+
+If using statsd, you should add the following to your graphite-api config file:
+```
+    enable_statsd: True
+```
+
 
 ### Caveat
 Blueflood Finder simulates graphite-api. This means we fetch data from blueflood and transform it to graphite-api format:
@@ -60,19 +68,23 @@ vagrant vm use the below commands.
     vagrant up
     
 To access grafana, bring your browser up and access the URL: http://192.168.50.4    
-    
+
+## Docker/grafana integration
+Tools for building a docker image are here:
+https://github.com/rackerlabs/docker-graphite-api-blueflood-finder
+
 ### Tests
 
 The tests require the following environment variables. Atleast one of no-auth or auth test variables should be set.
 
 For no-auth tests:
 
-       NO_AUTH_URL=<no auth url>
+       NO_BLUEFLOOD_URL=<no auth url>
        NO_AUTH_TENANT=<tenant id>
 
 For auth tests:
 
-       AUTH_URL=<blueflood end point>
+       BLUEFLOOD_URL=<blueflood end point>
        AUTH_TENANT=<tenant id>
        AUTH_USER_NAME=<username>
        AUTH_API_KEY=<user's api key>
@@ -90,6 +102,8 @@ To run nosetests, run the below commands
     
 ## Changelog
     
+* 1.1.4 (2017-10-05) Fix statsd counter bug
+* 1.1.2 (2017-09-21) Add enable_statsd
 * 1.0.2 (2017-05-31) Fix Grafana display issue for Counters
 * 1.0.1 (2016-03-25) Performance improvements for /metrics/find API.
 * 1.0.0 (2016-03-23) Base version. 

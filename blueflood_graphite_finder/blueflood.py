@@ -42,21 +42,26 @@ def calc_res(start, stop):
     # make an educated guess about the likely number of data points returned.
     num_points = (stop - start) / 60
     res = 'FULL'
-    if num_points > 400:
-        num_points = (stop - start) / secs_per_res['MIN5']
-        res = 'MIN5'
-    if num_points > 800:
-        num_points = (stop - start) / secs_per_res['MIN20']
-        res = 'MIN20'
-    if num_points > 800:
-        num_points = (stop - start) / secs_per_res['MIN60']
-        res = 'MIN60'
-    if num_points > 800:
-        num_points = (stop - start) / secs_per_res['MIN240']
-        res = 'MIN240'
-    if num_points > 800:
-        num_points = (stop - start) / secs_per_res['MIN1440']
+    # These numbers are the number of points requested, based on the time
+    # range requested. The following is the mapping between time range
+    # requested and blueflood resolution:
+    #     * FULL:    if time range requested is less than 6.6 hours
+    #     * MIN5:    if time range requested is less than 66 hours
+    #     * MIN20:   if time range requested is less than 1.5 weeks
+    #     * MIN60:   if time range requested is less than 4.5 weeks
+    #     * MIN240:  if time range requested is less than 18 weeks
+    #     * MIN1440: if time range requested is >  18 weeks
+    if num_points > 181440:
         res = 'MIN1440'
+    elif num_points > 45360:
+        res = 'MIN240'
+    elif num_points > 15120:
+        res = 'MIN60'
+    elif num_points > 3960:
+        res = 'MIN20'
+    elif num_points > 400:
+        res = 'MIN5'
+    logger.debug("calc_res: num_points=%d, res=%s", num_points, res)
     return res
 
 
@@ -65,7 +70,7 @@ class TenantBluefloodFinder(threading.Thread):
     __fetch_events__ = 'tenant_blueflood'
 
     def __init__(self, config=None):
-        logger.debug("Blueflood Finder v31")
+        logger.info("Blueflood Finder v1.1.4")
         threading.Thread.__init__(self)
         if os.path.isfile("/root/pdb-flag"):
             import remote_pdb
@@ -77,6 +82,7 @@ class TenantBluefloodFinder(threading.Thread):
             authentication_module = bf_config.get('authentication_module',
                                                   None)
             authentication_class = bf_config.get('authentication_class', None)
+            enable_statsd = bf_config.get('enable_statsd', False)
             enable_submetrics = bf_config.get('enable_submetrics', False)
             submetric_aliases = bf_config.get('submetric_aliases', {})
         else:
@@ -111,7 +117,8 @@ class TenantBluefloodFinder(threading.Thread):
         self.client = BluefloodClient(self.bf_query_endpoint,
                                       self.tenant,
                                       self.enable_submetrics,
-                                      self.submetric_aliases)
+                                      self.submetric_aliases,
+                                      enable_statsd)
         self.daemon = True
         self.start()
         logger.debug("BF finder submetrics enabled: %s", enable_submetrics)
@@ -378,9 +385,12 @@ class TenantBluefloodReader(object):
 
 
 class BluefloodClient(object):
-    def __init__(self, host, tenant, enable_submetrics, submetric_aliases):
+    def __init__(self, host, tenant, enable_submetrics, submetric_aliases,
+                 enable_statsd):
         self.host = host
         self.tenant = tenant
+        self.enable_statsd = enable_statsd
+        logger.info('Blueflood Finder statsd ' + str(self.enable_statsd))
         self.enable_submetrics = enable_submetrics
         self.submetric_aliases = submetric_aliases
         # This is the maximum number of json characters permitted by the
@@ -464,7 +474,7 @@ class BluefloodClient(object):
             while self.current_datapoint_passed(v_iter, ts):
                 v_iter = v_iter[1:]
             if self.current_datapoint_valid(v_iter, data_key, ts, step):
-                ret_arr.append(data_key.get_datapoints(v_iter[0]))
+                ret_arr.append(data_key.get_datapoints(v_iter[0], step))
                 if current_fixup is not None:
                     # we have found the end of the current fixup, so add the
                     # start and end of the current fixup into fixup list
@@ -477,7 +487,11 @@ class BluefloodClient(object):
                 if (l > 0) and (ret_arr[l - 1] is not None):
                     current_fixup = l - 1
                 ret_arr.append(None)
-        self.fixup(ret_arr, fixup_list)
+        # statsd counters are zeroed each time they are flushed, so
+        # they can't be interpolated:
+        # https://github.com/etsy/statsd/blob/master/docs/metric_types.md#counting
+        if not self.enable_statsd:
+            self.fixup(ret_arr, fixup_list)
         return ret_arr
 
     def get_multi_endpoint(self, endpoint, tenant):
@@ -509,8 +523,12 @@ class BluefloodClient(object):
         payload = {
             'from': start_time * 1000,
             'to': end_time * 1000,
-            'points': 1000
         }
+        # We want to fetch data using resolution instead of points.
+        # With points, blueflood will calculate the resolution, which
+        # may not be in synch with our notion of resolution here, which
+        # may cause data to not be displayed correctly in Grafana
+        payload['resolution'] = res
         if self.enable_submetrics:
             payload['select'] = ','.join(self.submetric_aliases.values())
         return payload
@@ -647,6 +665,16 @@ class TenantBluefloodLeafNode(LeafNode):
     __fetch_multi__ = 'tenant_blueflood'
 
 
+# The rollup values are multiplied by the length of the rollup.  For
+#  example, 5 minute rollups have the sum of the counts for all 5
+#  minutes.  This normalizes them.
+def step_correction(value, step):
+    if value is None:
+        return None
+    else:
+        return value/(step/60)
+
+
 class NonNestedDataKey(object):
     def __init__(self, key1):
         self.key1 = key1
@@ -654,11 +682,14 @@ class NonNestedDataKey(object):
     def exists(self, value):
         return self.key1 in value
 
-    def get_datapoints(self, value):
+    def get_datapoints(self, value, step):
         if not self.exists(value):
             return None
         else:
-            return value[self.key1]
+            if self.key1 in set(['average']):
+                return step_correction(value[self.key1], step)
+            else:
+                return value[self.key1]
 
 
 class NestedDataKey(object):
@@ -671,7 +702,7 @@ class NestedDataKey(object):
     def exists(self, value):
         return self.key1 in value and self.key2 in value[self.key1]
 
-    def get_datapoints(self, value):
+    def get_datapoints(self, value, step):
         if not self.exists(value):
             return None
         else:
